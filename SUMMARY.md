@@ -15,3 +15,4 @@
 * [第 13 章 程序集、类型发现与反射](docs/ch13.md)
 * [第 14 章 网络：从应用层 HTTP 到传输层 Socket](docs/ch14.md)
 * [第 15 章 文本与正则：String 不可变性、StringBuilder 与 RegularExpressions](docs/ch15.md)
+* [第 16 章 容器：从 ArrayList 的遗留教训到并发集合](docs/ch16.md)
