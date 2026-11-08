@@ -19,3 +19,4 @@
 * [第 17 章 线程与并发：Thread / ThreadPool / Task 与 PowerShell 运行空间](docs/ch17.md)
 * [第 18 章 IO 深化：流、编码与大文件处理](docs/ch18.md)
 * [第 19 章 图形界面：Windows Forms 与 PowerShell 的 STA 约束](docs/ch19.md)
+* [第 20 章 基础必备知识：错误处理、字符字符串与内核对象](docs/ch20.md)
