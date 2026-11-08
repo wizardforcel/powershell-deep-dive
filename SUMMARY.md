@@ -31,3 +31,4 @@
 * [第 29 章 使用边界：PowerShell 中 Win32 调用的工程判断](docs/ch29.md)
 * [第 30 章 模块化：函数、脚本与模块](docs/ch30.md)
 * [第 31 章 脚本安全与执行策略](docs/ch31.md)
+* [第 32 章 P/Invoke 与 COM 互操作](docs/ch32.md)
