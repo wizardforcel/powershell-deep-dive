@@ -14,17 +14,13 @@
 
 ## 2.1 基元类型、值类型与引用类型在 PowerShell 中的表现
 
-### 简介
-
 假设你要在 PowerShell 里保存一个数字：`$age = 18`。就这一行，背后发生了很多事：`18` 被识别成一个**数字字面量**，PowerShell 要决定它“到底是哪种数字”，然后才把它装进变量 `$age`。
 
 如果放到 C# 里，程序员必须自己声明类型：“`int age = 18;`”。但在 PowerShell 里你什么都不用写——PowerShell 会**自动**帮你挑一个合适的类型。这种“自动挑类型”的能力带来了极大的便利，但如果你不了解它背后的规则，迟早会在“咦，怎么变成字符串了？”“怎么多了一堆小数位？”这类问题上栽跟头。
 
-本节就把 PowerShell 底层的“选类型”规则讲清楚，并且补上两个伴随的硬知识：**值类型 vs 引用类型**到底差在哪，以及特别诡异的 **`$null`** 到底是个什么鬼。
+这一节就把 PowerShell 底层的“选类型”规则讲清楚，并且补上两个伴随的硬知识：**值类型 vs 引用类型**到底差在哪，以及特别诡异的 **`$null`** 到底是个什么鬼。
 
-### 知识点
-
-#### 知识点一：字面量默认映射到 .NET 类型——“每一个字都有户口”
+### 字面量默认映射到 .NET 类型——“每一个字都有户口”
 
 先说结论：**PowerShell 里的每一个字面量（literal）背后，都有一个确切的 .NET 类型**。所谓字面量，就是你在代码里“直接写出来”的那些值——数字、带引号的文字、`$true`/`$false` 这些。
 
@@ -64,7 +60,7 @@ $true.GetType().FullName   # 输出：System.Boolean （布尔值：真/假）
 
 > 顺便说一句：文里的 `[int]`、`[long]`、`[double]`、`[string]`、`[bool]` 这些带方括号的名字，在 PowerShell 里叫**类型加速器**（type accelerator）。它们是那些长得吓人的完整 .NET 类型名的“小名”，写起来方便。`[int]` 就是 `[System.Int32]`，两者是同一个东西。
 
-#### 知识点二：`GetType()`——随时查看对象的“户口本”
+### `GetType()`——随时查看对象的“户口本”
 
 刚才我们已经用到了 `GetType()`。这里再把它当成一个小工具彻底掌握。
 
@@ -92,7 +88,6 @@ $s.GetType().IsValueType       # False
 # 用字符串名字拿到类型对象
 $t = [type]::GetType('System.Int32')
 $t.FullName                   # System.Int32
-$t.GetType().Name             # RuntimeType
 
 # [int] 本身就是那个类型对象，可以直接查
 [int].FullName                # System.Int32
@@ -100,7 +95,20 @@ $t.GetType().Name             # RuntimeType
 [string].IsValueType          # False
 ```
 
-#### 知识点三：值类型 vs 引用类型——“东西”和“地址”
+另外，常用的类型加速器可以混着用，记住几个高频的就够：
+
+```powershell
+[int]        # System.Int32    32 位整数
+[long]       # System.Int64    64 位整数
+[double]     # System.Double   双精度小数
+[decimal]    # System.Decimal  高精度小数
+[string]     # System.String   字符串
+[bool]       # System.Boolean  布尔值
+[datetime]   # System.DateTime 日期时间
+[object]     # System.Object   一切类型的“老大哥”
+```
+
+### 值类型 vs 引用类型——“东西”和“地址”
 
 这是 .NET 的世界观里最基础、也最关键的一对概念。用大白话讲：
 
@@ -154,7 +162,7 @@ graph TB
 
 另外提一个相关名词：**装箱（boxing）**。值类型（比如数字）在 PowerShell 的管道里流通时，为了能“裹上 PSObject 外皮”（2.2 节会讲），偶尔会被装进一个盒子变成引用式的东西，这个动作叫装箱；需要取回数字时再“拆箱”。普通脚本里你几乎感觉不到它，但处理海量数字时它是有代价的。这里知道这个词存在即可。
 
-#### 知识点四：`$null`——“自动化空值”的特殊语义
+### `$null`——“自动化空值”的特殊语义
 
 最后是一个让无数新手（和不少老手）挠头的东西：`$null`。
 
@@ -183,7 +191,13 @@ graph TB
 
 4. **`$null` 在管道里会产生“缝隙”**：它本身不产生任何输出。这导致一个著名陷阱：当你把一个集合里的某个元素设成 `$null` 然后输出整个集合，那个位置会被“跳过”。
 
-5. **布尔值里有一个孪生兄弟 `[nullable]`（可空类型）**：C# 中 `int?` 这种“可能没有值”的类型，在 PowerShell 里一般用 `$null` 表达。不过通常你是感知不到的。
+5. **`$null` 不属于任何类型**：
+
+   ```powershell
+   $val = $null
+   $null -eq $val        # True
+   $val -is [string]     # False
+   ```
 
 对脚本健壮性来说，`$null` 最重要的是养成“**拿到可能为空的值，先判断是不是 `$null` 再说**”的习惯：
 
@@ -197,66 +211,9 @@ else {
 }
 ```
 
-> **提示**：判断是否为空，建议写成 `$null -eq $result`（把 `$null` 放在左边）而不是 `$result -eq $null`。虽然两者结果一样，但把 `$null` 放左边有一个好处：**你永远不会因为漏掉一个 `-eq` 而把整个比较写成“给变量赋值”**（PowerShell 的 `-eq` 不是 `=`，本来也拼不混，但左 $-null 还是业界更稳的惯用法）。
+> **提示**：判断是否为空，建议写成 `$null -eq $result`（把 `$null` 放在左边）而不是 `$result -eq $null`。虽然两者结果一样，但把 `$null` 放左边有一个好处：**你永远不会因为漏掉一个 `-eq` 而把整个比较写成“给变量赋值”**。
 
-### 语法、类与函数
-
-#### 1）常用类型加速器
-
-```powershell
-[int]        # System.Int32    32 位整数
-[long]       # System.Int64    64 位整数
-[float]      # System.Single   单精度小数
-[double]     # System.Double   双精度小数
-[decimal]    # System.Decimal  高精度小数
-[byte]       # System.Byte     0~255 的无符号字节
-[char]       # System.Char     单个字符
-[string]     # System.String   字符串
-[bool]       # System.Boolean  布尔值
-[datetime]   # System.DateTime 日期时间
-[object]     # System.Object   一切类型的“老大哥”
-```
-
-#### 2）查看类型信息
-
-```powershell
-$a = 1
-$a.GetType()                  # 类型对象
-$a.GetType().Name             # Int32
-$a.GetType().FullName         # System.Int32
-$a.GetType().IsValueType      # True
-[type]::GetType('System.String').FullName   # System.String
-[string].FullName                            # System.String
-```
-
-#### 3）值类型 vs 引用类型——验证示例
-
-```powershell
-# 值类型：像“复印件”
-$x = 5
-$y = $x
-$x = 100
-$y                              # 还是 5
-
-# 引用类型：像“门牌号”（数组为例）
-$x = @(1, 2, 3)
-$y = $x
-$x[0] = 999
-$y[0]                           # 变成 999 了！
-```
-
-#### 4）`$null` 的检查
-
-```powershell
-$val = $null
-$null -eq $val        # True
-$val -is [string]     # False —— $null 不属于任何类型
-if ($null -eq $val) { '是空的' }
-```
-
-### 本节小结
-
-回顾一下本节五个要点：
+### 2.1 小结
 
 1. **字面量都映射到明确的 .NET 类型**：`1`→`[int]`、`1L`→`[long]`、`1.0`→`[double]`、`"x"`→`[string]`。数字超大时会自动升级。
 2. **`GetType()` 是查看类型户口本的工具**，字段有 `Name`、`FullName`、`IsValueType`、`BaseType`。
@@ -268,19 +225,15 @@ if ($null -eq $val) { '是空的' }
 
 ## 2.2 PSObject 与扩展类型系统（ETS）
 
-### 简介
-
 上一节讲的是“类型的户口”。这一节要讲的，是 PowerShell 里最让初学者“看不透”的一层机制——**为什么明明是一个普普通通的 .NET 对象，到了 PowerShell 里就像穿了魔术外衣，能被随便添加新属性？**
 
-想想看：`Get-Process` 返回的是一个进程对象（.NET 里叫 `System.Diagnostics.Process`）。按理说这类对象有哪些属性、哪些方法，是 .NET 早就定死的，普通人不能随便改。可是在 PowerShell 里，你却能给**每一个**进程对象都加一个新属性，比如加个 `内存占用MB`——这在传统的、**静态**的 .NET 世界里是不可想象的。
+想想看：`Get-Process` 返回的是一个进程对象（.NET 里叫 `System.Diagnostics.Process`）。按理说这类对象有哪些属性、哪些方法，是 .NET 早就定死的，普通人不能随便改。可是在 PowerShell 里，你却能给**每一个**进程对象都加一个新属性，比如加个“内存占用MB”——这在传统的、**静态**的 .NET 世界里是不可想象的。
 
 答案就藏在 `PSObject` 这个名字里。**PowerShell 里流通的每一个对象，都不是“裸奔”的 .NET 对象，而是被一层叫 `PSObject` 的“外衣”包裹过的对象。** 这层外衣才是 PowerShell 一切“动态扩展”能力的根源。
 
 这一节我们把这层“外衣”脱下来研究明白。理解它，你就理解了 PowerShell 为什么是 PowerShell，而不是“另一个 C# 解释器”。
 
-### 知识点
-
-#### 知识点一：每一个对象都穿着一件 `PSObject` 外衣
+### 每一个对象都穿着一件 `PSObject` 外衣
 
 先看怎么“脱衣服”：
 
@@ -332,7 +285,15 @@ graph LR
 2. **PowerShell 可以额外加东西**——比如每个进程对象都有个 `Company` 属性，但 .NET 的 `Process` 类里根本没有这个属性，它是 PowerShell 从类型配置里“补”上去的（叫 **ExtendedMembers**）；
 3. **类型名单可以扩展**——你可以让一个类型“看起来”还是原来的类型（这样 `-is` 判断照样成立），同时又能多出很多新成员。
 
-#### 知识点二：ETS——不改原类型，只加“外衣”
+除了直接访问 `PSObject`，你天天用的 `Get-Member` 其实就是这层外衣的“平民版操作界面”：
+
+```powershell
+Get-Process -Id $PID | Get-Member                       # 属性/方法列表
+Get-Process -Id $PID | Get-Member -MemberType Property  # 只要属性
+Get-Process -Id $PID | Get-Member -MemberType Method    # 只要方法
+```
+
+### ETS——不改原类型，只加“外衣”
 
 现在回答开头的疑问：PowerShell 是怎么做到“给每个进程对象都添加新属性”的？
 
@@ -373,9 +334,16 @@ Update-TypeData `
 
 - 它**只影响当前会话**，关掉窗口就没了。想持久化，用 `.ps1xml` 配置文件（下面讲）；
 - 名字不同的话，需要 `-Force` 才能覆盖（`Update-TypeData -Force`）；
-- 它可以加属性（`-MemberType ScriptProperty` / NoteProperty）、方法（`ScriptMethod`）、别名（`AliasProperty`）、还可以改类型名（`-TypeName`）和排序方式（`-DefaultDisplayProperty`）等。这里先知道它能“给类加成员”即可，第 12 章格式化部分会再见面。
+- 它可以加属性（`-MemberType ScriptProperty` / NoteProperty）、方法（`ScriptMethod`）、别名（`AliasProperty`），还能改默认显示属性等。这里先知道它能“给类加成员”即可，第 12 章格式化部分会再见面。
 
-#### 知识点三：ATS——连“非 .NET 世界”也能套上外衣
+顺便，管理这些类型数据的命令也记一下：
+
+```powershell
+Get-TypeData                                   # 查看当前会话所有类型数据
+Get-TypeData -TypeName System.Int32            # 查看单个类型
+```
+
+### ATS——连“非 .NET 世界”也能套上外衣
 
 ETS 只解决“给 .NET 对象加东西”。但如果对象压根不是 .NET 的——比如经典的 **COM 组件**（老 Office、WScript）、**WMI 对象**、Excel 的单元格——又该怎么办？
 
@@ -395,15 +363,11 @@ $item.PSObject.AdaptedMembers |
 
 对 COM 也一样。比如用 `New-Object -ComObject WScript.Shell` 创建一个老的 COM 对象，`$ws.PSObject.Members` 里就能看到通过适配器暴露出来的一大堆属性和方法。这些对你日常脚本来说，通常“可用即可”，不用深究底层，但知道“**PowerShell 连不同类型世界都能统一成对象**”这一点，能帮你理解为什么几乎所有东西都能 `.属性`、能进管道、能被 `Where-Object` 筛选。
 
-#### 知识点四：`Types.ps1xml`——类型扩展的“配置文件”
+### Types.ps1xml——类型扩展的“配置文件”
 
 刚才的 `Update-TypeData` 是“改在内存里”。如果想让类型扩展**每次打开 PowerShell 都有**，就得写配置文件——`Types.ps1xml`。
 
 PowerShell 自己就带着一份：你装 PowerShell 的目录（`$PSHOME`）下有 `types.ps1xml` 等若干 `.ps1xml` 文件，PowerShell 启动时会自动加载它们。刚才提到“每个进程对象都有 `Company` 属性”——其实就来自这份内置配置里的“类型定义”。
-
-- 查看现有类型数据：`Get-TypeData -TypeName System.Diagnostics.Process`
-- 查看所有已加载的类型数据：`Get-TypeData`
-- 加载自己的配置文件：`Update-TypeData -AppendPath .\mytypes.ps1xml`
 
 一个典型的 `.ps1xml` 片段长这样（结构比看起来简单）：
 
@@ -423,69 +387,15 @@ PowerShell 自己就带着一份：你装 PowerShell 的目录（`$PSHOME`）下
 </Types>
 ```
 
-写好后，`Update-TypeData -AppendPath .\mytypes.ps1xml` 即可生效（或放进 `$PSHOME` 让所有会话加载，但一般不建议改系统文件）。这一节你只要知道：**类型扩展有“临时（命令）”和“持久（文件）”两条路，`.ps1xml` 是持久那份的载体**。第 12 章格式化输出时，我们会再次见到它的兄弟 `format.ps1xml`。
-
-### 语法、类与函数
-
-#### 1）进入 `PSObject` 外衣
+写好后，让当前会话加载它：
 
 ```powershell
-$p = Get-Process -Id $PID
-$p.PSObject                # 外衣对象本身
-$p.PSObject.TypeNames      # 类型名清单
-$p.PSObject.Properties     # 所有属性
-$p.PSObject.Methods        # 所有方法
-$p.PSObject.Members        # 属性+方法合集
-$p.PSObject.AdaptedMembers # 来自底层对象/适配器的成员
-$p.PSObject.ExtendedMembers# PowerShell 额外加的成员
+Update-TypeData -AppendPath .\mytypes.ps1xml
 ```
 
-#### 2）`Get-Member`：`PSObject` 的“平民版”
+（放进 `$PSHOME` 可以让所有会话加载，但一般不建议改系统文件。）这一节你只要知道：**类型扩展有“临时（命令）”和“持久（文件）”两条路，`.ps1xml` 是持久那份的载体**。第 12 章格式化输出时，我们会再次见到它的兄弟 `format.ps1xml`。
 
-其实你天天用的 `Get-Member`，就是给 `PSObject` 外衣加了个方便的操作界面：
-
-```powershell
-Get-Process -Id $PID | Get-Member                    # 属性/方法列表
-Get-Process -Id $PID | Get-Member -MemberType Property  # 只要属性
-Get-Process -Id $PID | Get-Member -MemberType Method    # 只要方法
-```
-
-#### 3）运行时加成员：`Add-Member`
-
-```powershell
-$p = Get-Process -Id $PID
-$p | Add-Member -NotePropertyName Source -NotePropertyValue '脚本A.ps1'
-$p.Source
-```
-
-#### 4）类型层面加成员：`Update-TypeData`
-
-```powershell
-Update-TypeData -TypeName System.Diagnostics.Process `
-    -MemberName 内存MB `
-    -MemberType ScriptProperty `
-    -Value { [math]::Round($this.WorkingSet64 / 1MB, 2) }
-
-(Get-Process -Id $PID).内存MB
-```
-
-#### 5）适配器成员
-
-```powershell
-(Get-Item 'C:\Windows').PSObject.AdaptedMembers.Name
-```
-
-#### 6）类型数据的管理
-
-```powershell
-Get-TypeData                                   # 查看当前会话所有类型数据
-Get-TypeData -TypeName System.Int32            # 查看单个
-Update-TypeData -AppendPath .\mytypes.ps1xml   # 加载自己的 .ps1xml
-```
-
-### 本节小结
-
-这一节的信息密度不小，我们浓缩成四句话：
+### 2.2 小结
 
 1. **PowerShell 里的每个对象都穿一层 `PSObject` 外衣**，透过这层外衣你才能看到 `PSObject.Properties/Methods/TypeNames`。
 2. **ETS（扩展类型系统）让类型可以“动态加成员”**：不改底层 .NET 类，只在外衣上登记——`Add-Member` 加给单个对象，`Update-TypeData` 加给整个类型。
@@ -498,17 +408,13 @@ Update-TypeData -AppendPath .\mytypes.ps1xml   # 加载自己的 .ps1xml
 
 ## 2.3 类型转换、强制转换与 `-as` / `[type]` 操作符
 
-### 简介
-
 上一节我们学会了“给对象加衣裳”。这一节回到类型本身，讲一个更日常、更实用的主题：**类型转换**。
 
 你在 PowerShell 里不可能永远只用“刚刚好”的类型。最常见的场景就是：**从外部拿到的几乎都是字符串**。配置文件里读出来的是字符串、网页上下载下来的是字符串、用户在输入框里敲的还是字符串。可你往往需要把它们当成数字或日期用。这时候就得做“翻译先生”——把字符串翻译成数字、翻译成日期。PowerShell 的翻译规则，比 C# 宽松得多，也隐晦得多。**什么时候静默成功、什么时候直接报错、什么时候悄悄变成 `$null`**，是脚本健壮性的关键分水岭。
 
 本节把三条“翻译通道”讲清楚：显式转换 `[int]`、安全带 `-as`、以及底层的 `LanguagePrimitives` 机制。
 
-### 知识点
-
-#### 知识点一：两条主通道——`[type]`（抛错）和 `-as`（给你 `$null`）
+### 两条主通道——`[type]`（抛错）和 `-as`（给你 `$null`）
 
 **通道一：`[类型]` 强制转换（cast）**
 
@@ -531,7 +437,8 @@ Update-TypeData -AppendPath .\mytypes.ps1xml   # 加载自己的 .ps1xml
 ```powershell
 '42' -as [int]       # 42
 'abc' -as [int]      # $null （不会报错！）
-'3.14' -as [int]     # 3 （可以转换成 3，因为它能转成 double 再转 int）
+'3.14' -as [int]     # 3 （能转：先转 double 再取整）
+'3.99' -as [int]     # 4
 $null -eq ('abc' -as [int])   # True
 ```
 
@@ -568,7 +475,7 @@ if ($null -eq $number) {
 }
 ```
 
-#### 知识点二：锡迪尼技巧——`[type]` 括号加法的自动转换
+### 数字与字符串混合运算时的自动转换
 
 细心的你可能会问：那 `1 + 2` 是数字相加，`'1' + '2'` 是字符串拼接，那把**数字和字符串**加在一起呢？
 
@@ -577,9 +484,15 @@ if ($null -eq $number) {
 '1' + 2          # '12' —— 字符串占主导时，把 2 变成字符串再拼接
 ```
 
-PowerShell 会按“谁更能容纳对方”的方向自动转换，这背后的执行者就是 `LanguagePrimitives`（语言原语，见知识点三）。这个“自动翻译”很方便，但也会埋雷——比如你从文件里读回一个 `'2'`（字符串），习惯性写 `$total = $total + $value`，一旦某天读到的不是数字，你就得到字符串拼接而不是加法。**所以重要数值，先显式 `[int]` 或 `-as [int]` 再运算**，别依赖默契。
+PowerShell 会按“谁更能容纳对方”的方向自动转换，这背后的执行者就是 `LanguagePrimitives`（语言原语，见下一个知识点）。这个“自动翻译”很方便，但也会埋雷——比如你从文件里读回一个 `'2'`（字符串），习惯性写 `$total = $total + $value`，一旦某天读到的不是数字，你就得到字符串拼接而不是加法。**所以重要数值，先显式 `[int]` 或 `-as [int]` 再运算**，别依赖默契。
 
-#### 知识点三：转换的底层执行者——`LanguagePrimitives` 与 `Convert`
+比较时同理，类型会让结果出乎意料：
+
+```powershell
+"5" -eq 5        # True —— 比较时会把右边转换成能匹配左边的类型
+```
+
+### 转换的底层执行者——`LanguagePrimitives` 与 `Convert`
 
 如果你想知道“PowerShell 到底按什么优先级转换”，答案是：它有一套自己的“语言级”转换逻辑，核心类叫 `LanguagePrimitives`（在 `System.Management.Automation` 命名空间里）。它处理：
 
@@ -620,7 +533,7 @@ graph LR
     N --> R
 ```
 
-#### 知识点四：字符串转数字的区域性（文化）问题
+### 字符串转数字的区域性（文化）问题
 
 最后提醒一个“潜伏的坑”：**同一个“数字的写法”，在不同国家/语言环境下含义可能不同。**
 
@@ -628,47 +541,7 @@ graph LR
 
 PowerShell 在多数解析场景下会按**不区分区域（invariant）**的方式处理，所以跨机器问题不大；但如果你是**显式**走 `CultureInfo` 的代码，就要小心。这里先建立一个意识：**只要字符串里的数字格式是“咱们平时写的格式”，PowerShell 一般能安全解析；一旦出现“别人的 locale”，记得显式指定区域性**。第 15.4 节会系统讲 `CultureInfo` 与格式化，这里点到为止。
 
-### 语法、类与函数
-
-#### 1）强制转换 `[type]`（失败抛异常）
-
-```powershell
-[int]'42'          # 42
-[double]'3.14'     # 3.14
-[bool]'true'       # True
-[datetime]'2026-11-08'   # 得到日期对象
-[int]'abc'         # 抛异常：无法将值"abc"转换为类型"System.Int32"
-```
-
-#### 2) `-as` 操作符（失败返回 `$null`）
-
-```powershell
-'42' -as [int]     # 42
-'abc' -as [int]    # $null
-'3.14' -as [int]   # 3
-'3.99' -as [int]   # 4 （按就近取整）
-```
-
-#### 3）安全转换惯用法
-
-```powershell
-$raw = 'not-a-number'
-$n = $raw -as [int]
-if ($null -eq $n) {
-    "无法转换：$raw"
-} else {
-    "结果：$n"
-}
-```
-
-#### 4）底层设施
-
-```powershell
-[System.Convert]::ChangeType('42', [int])
-[System.Management.Automation.LanguagePrimitives]::ConvertTo('42', [int])
-```
-
-### 本节小结
+### 2.3 小结
 
 类型转换这节就一句话总结：
 
