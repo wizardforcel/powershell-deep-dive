@@ -10,3 +10,4 @@
 * [第 8 章 异常处理：从 C# 的 try/catch 到 PowerShell 的双错误通道](docs/ch8.md)
 * [第 9 章 命令发现与帮助系统](docs/ch9.md)
 * [第 10 章 提供程序与驱动器：统一命名空间](docs/ch10.md)
+* [第 11 章 管道深入：对象流、参数绑定与 `$input`](docs/ch11.md)
