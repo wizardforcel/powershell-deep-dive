@@ -32,3 +32,4 @@
 * [第 30 章 模块化：函数、脚本与模块](docs/ch30.md)
 * [第 31 章 脚本安全与执行策略](docs/ch31.md)
 * [第 32 章 P/Invoke 与 COM 互操作](docs/ch32.md)
+* [第 33 章 与 C# 的协作边界：什么时候不该用 PowerShell](docs/ch33.md)
