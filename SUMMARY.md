@@ -9,3 +9,4 @@
 * [第 7 章 泛型、集合与 LINQ 风格查询](docs/ch7.md)
 * [第 8 章 异常处理：从 C# 的 try/catch 到 PowerShell 的双错误通道](docs/ch8.md)
 * [第 9 章 命令发现与帮助系统](docs/ch9.md)
+* [第 10 章 提供程序与驱动器：统一命名空间](docs/ch10.md)
