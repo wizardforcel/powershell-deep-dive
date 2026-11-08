@@ -21,3 +21,4 @@
 * [第 19 章 图形界面：Windows Forms 与 PowerShell 的 STA 约束](docs/ch19.md)
 * [第 20 章 基础必备知识：错误处理、字符字符串与内核对象](docs/ch20.md)
 * [第 21 章 进程与作业](docs/ch21.md)
+* [第 22 章 线程基础与调度](docs/ch22.md)
