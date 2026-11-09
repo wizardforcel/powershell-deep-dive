@@ -1,5 +1,6 @@
 # Summary
 
+* [PowerShell 纵深](README.md)
 * [第 1 章 PowerShell 执行模型与程序结构](docs/ch01.md)
 * [第 2 章 类型基础：CLR 类型在 PowerShell 中的“第一层皮肤”](docs/ch02.md)
 * [第 3 章 变量、作用域与运算符](docs/ch03.md)
