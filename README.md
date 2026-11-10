@@ -82,13 +82,17 @@
 
 ## 写作约定
 
-- 代码块均标注语言（```powershell / ```csharp / ```mermaid），可直接复制运行或渲染。
+- 代码块均标注语言（powershell / csharp / mermaid），可直接复制运行或渲染。
 - 涉及系统修改的示例（注册表、执行策略、作业终止等）均在文中标注风险与清理方式。
 - 每章末尾附“动手练习”，建议边读边跑。
 
 ## 贡献
 
 发现错误或有改进建议，欢迎提 [Issue](https://github.com/wizardforcel/powershell-deep-dive/issues) 或 PR。校对类 PR（错别字、代码勘误、表述优化）尤其欢迎。
+
+## 购买纸质书
+
+![](dpcs/img/opendoccn_print_20261110.png)
 
 ## 赞助我
 
